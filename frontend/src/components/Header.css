@@ -1,0 +1,45 @@
+.app-header {
+  height: var(--header-height);
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; position: sticky; top: 0; z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.header-left { display: flex; flex-direction: column; gap: 1px; }
+.header-title { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+.header-date { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.header-icon-btn {
+  position: relative; width: 40px; height: 40px;
+  border-radius: var(--radius-md); border: 1px solid var(--border);
+  background: var(--white); cursor: pointer; font-size: 1.2rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.header-icon-btn:hover { background: var(--primary-50); border-color: var(--primary); }
+.header-badge {
+  position: absolute; top: -5px; right: -5px;
+  min-width: 18px; height: 18px; background: var(--secondary);
+  border-radius: var(--radius-full); font-size: 0.65rem; font-weight: 800;
+  color: white; display: flex; align-items: center; justify-content: center;
+  padding: 0 4px; border: 2px solid var(--white);
+}
+.header-badge.danger { background: var(--danger); }
+
+.header-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 14px 6px 6px; border-radius: var(--radius-md);
+  border: 1px solid var(--border); background: var(--slate-50); cursor: default;
+}
+.header-avatar {
+  width: 32px; height: 32px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.875rem; font-weight: 700; color: white; text-transform: uppercase;
+}
+.header-user-text { display: flex; flex-direction: column; gap: 1px; }
+.header-username { font-size: 0.8125rem; font-weight: 700; color: var(--text-primary); }
+.header-role { font-size: 0.7rem; font-weight: 600; color: var(--primary); }

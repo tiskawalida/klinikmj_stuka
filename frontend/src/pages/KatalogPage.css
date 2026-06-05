@@ -1,0 +1,13 @@
+.katalog-page { display: flex; flex-direction: column; gap: 20px; }
+.katalog-toolbar {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+}
+.katalog-sort { display: flex; gap: 8px; align-items: center; }
+.medicine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+}
+@media (max-width: 600px) {
+  .medicine-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+}

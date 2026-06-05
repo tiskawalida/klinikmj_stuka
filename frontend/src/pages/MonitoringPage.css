@@ -1,0 +1,11 @@
+.resource-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.9rem; padding: 6px 0; border-bottom: 1px solid var(--border);
+}
+.resource-row:last-child { border-bottom: none; }
+.resource-row span:first-child { color: var(--text-muted); }
+.resource-bar-label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; font-weight: 600; }
+.resource-bar { height: 10px; background: var(--slate-100); border-radius: var(--radius-full); overflow: hidden; }
+.resource-bar-fill { height: 100%; border-radius: var(--radius-full); transition: width 0.5s ease; }
+.btn-success { background: var(--success); color: white; border: none; }
+.btn-success:hover { background: #16a34a; }

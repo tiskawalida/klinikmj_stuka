@@ -1,0 +1,51 @@
+.dashboard-page { display: flex; flex-direction: column; gap: 24px; }
+
+.notif-feed {
+  background: var(--slate-800); border-radius: var(--radius-lg);
+  padding: 16px 20px; display: flex; flex-direction: column; gap: 10px;
+}
+.notif-feed-title { font-size: 0.9rem; font-weight: 700; color: white; margin: 0; }
+.notif-feed-list { display: flex; flex-direction: column; gap: 8px; }
+.notif-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: var(--radius-md);
+  border-left: 3px solid;
+}
+.notif-warning { background: rgba(245,158,11,0.15); border-color: var(--warning); }
+.notif-danger { background: rgba(239,68,68,0.15); border-color: var(--danger); }
+.notif-info { background: rgba(59,130,246,0.15); border-color: var(--info); }
+.notif-icon { font-size: 1.2rem; flex-shrink: 0; }
+.notif-msg { font-size: 0.875rem; font-weight: 600; color: rgba(255,255,255,0.9); margin: 0; }
+.notif-time { font-size: 0.72rem; color: rgba(255,255,255,0.4); }
+
+.dashboard-greeting {
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.dashboard-greeting h1 { font-size: 1.6rem; margin: 0 0 4px; }
+.dashboard-greeting p { color: var(--text-muted); margin: 0; }
+.dashboard-role-badge {
+  padding: 8px 18px; border-radius: var(--radius-full);
+  background: var(--primary); color: white;
+  font-size: 0.875rem; font-weight: 700;
+}
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+}
+@media (max-width: 1100px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+
+.dashboard-charts {
+  display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
+}
+@media (max-width: 900px) { .dashboard-charts { grid-template-columns: 1fr; } }
+
+.chart-card .card-header { padding: 16px 20px; }
+.chart-pie-body { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 20px !important; }
+.pie-legend { display: flex; flex-direction: column; gap: 6px; }
+.pie-legend-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; color: var(--text-secondary);
+}
+.pie-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.pie-val { margin-left: auto; font-weight: 700; color: var(--text-primary); }
