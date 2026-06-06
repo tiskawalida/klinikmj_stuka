@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -21,6 +22,7 @@ export default function Header() {
   const { totalItems } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
+  const [showNotif, setShowNotif] = useState(false);
   const unread = notifications.filter(n => !n.read).length;
   const title = PAGE_TITLES[location.pathname] || 'Klinik Makmur Jaya';
 
@@ -42,11 +44,7 @@ export default function Header() {
           </button>
         )}
 
-        {/* Notifikasi */}
-        <button className="header-icon-btn" onClick={markAllRead} title="Notifikasi">
-          🔔
-          {unread > 0 && <span className="header-badge danger">{unread}</span>}
-        </button>
+
 
         {/* User info */}
         <div className="header-user">

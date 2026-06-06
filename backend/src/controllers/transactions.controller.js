@@ -13,7 +13,10 @@ const generateInvoice = () => {
 const checkout = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const { items, paymentMethod, amountPaid, notes, resepImageUrl } = req.body;
+    let { items, paymentMethod, amountPaid, notes, resepImageUrl, deliveryMethod } = req.body;
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch(e) { items = []; }
+    }
     if (!items || !Array.isArray(items) || items.length === 0)
       throw Object.assign(new Error('Keranjang belanja kosong.'), { statusCode: 400 });
 
@@ -70,6 +73,7 @@ const checkout = async (req, res, next) => {
       status: req.user.role === 'Kasir' ? 'Selesai' : 'Dikonfirmasi',
       resepImageUrl: resepImageUrl || null,
       resepVerified: req.user.role === 'Kasir' ? true : !!resepImageUrl,
+      deliveryMethod: deliveryMethod || 'Ambil di Klinik',
       notes,
       processedBy: req.user.id,
     }, { transaction: t });

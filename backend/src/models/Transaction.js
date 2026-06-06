@@ -15,10 +15,11 @@ const Transaction = sequelize.define('Transaction', {
   amountPaid: { type: DataTypes.DECIMAL(14, 2), allowNull: true },
   changeAmount: { type: DataTypes.DECIMAL(14, 2), allowNull: true, defaultValue: 0 },
   status: {
-    type: DataTypes.ENUM('Pending', 'Dikonfirmasi', 'Diproses', 'Siap Diambil', 'Selesai', 'Dibatalkan'),
+    type: DataTypes.ENUM('Pending', 'Dikonfirmasi', 'Diproses', 'Sedang Dikirim', 'Siap Diambil', 'Selesai', 'Dibatalkan'),
     allowNull: false,
     defaultValue: 'Pending',
   },
+  deliveryMethod: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Ambil di Klinik' },
   resepImageUrl: { type: DataTypes.STRING, allowNull: true },
   resepVerified: { type: DataTypes.BOOLEAN, defaultValue: false },
   notes: { type: DataTypes.TEXT, allowNull: true },

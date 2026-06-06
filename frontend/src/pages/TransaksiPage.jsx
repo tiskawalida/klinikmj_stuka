@@ -3,8 +3,8 @@ import { transactionsAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-const STATUS_COLORS = { Pending: 'warning', Dikonfirmasi: 'info', Diproses: 'info', 'Siap Diambil': 'primary', Selesai: 'success', Dibatalkan: 'danger' };
-const ALL_STATUS = ['', 'Pending', 'Dikonfirmasi', 'Diproses', 'Siap Diambil', 'Selesai', 'Dibatalkan'];
+const STATUS_COLORS = { Pending: 'warning', Dikonfirmasi: 'info', Diproses: 'info', 'Sedang Dikirim': 'primary', 'Siap Diambil': 'primary', Selesai: 'success', Dibatalkan: 'danger' };
+const ALL_STATUS = ['', 'Pending', 'Dikonfirmasi', 'Diproses', 'Sedang Dikirim', 'Siap Diambil', 'Selesai', 'Dibatalkan'];
 
 export default function TransaksiPage() {
   const { user } = useAuth();
@@ -68,7 +68,7 @@ export default function TransaksiPage() {
             <table>
               <thead><tr>
                 <th>Invoice</th><th>Pelanggan</th><th>Items</th>
-                <th>Total</th><th>Pembayaran</th><th>Resep</th><th>Status</th><th>Waktu</th>
+                <th>Total</th><th>Pembayaran</th><th>Pengiriman</th><th>Resep</th><th>Status</th><th>Waktu</th>
                 {(user?.role === 'Admin' || user?.role === 'Kasir') && <th>Aksi</th>}
               </tr></thead>
               <tbody>
@@ -79,6 +79,11 @@ export default function TransaksiPage() {
                     <td>{trx.items?.length || 0} item</td>
                     <td><strong>Rp {parseFloat(trx.totalAmount).toLocaleString('id-ID')}</strong></td>
                     <td>{trx.paymentMethod}</td>
+                    <td>
+                      <span className="badge badge-muted" style={{fontSize: '0.7rem', padding: '2px 6px'}}>
+                        {trx.deliveryMethod === 'Diantar ke Alamat' ? '🛵 Diantar' : '🏥 Ambil'}
+                      </span>
+                    </td>
                     <td>
                       {trx.resepImageUrl ? (
                         <a href={`http://localhost:5000${trx.resepImageUrl}`} target="_blank" rel="noreferrer">
@@ -93,7 +98,7 @@ export default function TransaksiPage() {
                         <select className="form-select" style={{ fontSize: '0.8rem', padding: '4px 8px', width: 'auto' }}
                           value={trx.status}
                           onChange={e => handleStatusUpdate(trx.id, e.target.value)}>
-                          {['Dikonfirmasi', 'Diproses', 'Siap Diambil', 'Selesai', 'Dibatalkan'].map(s => (
+                          {['Dikonfirmasi', 'Diproses', trx.deliveryMethod === 'Diantar ke Alamat' ? 'Sedang Dikirim' : 'Siap Diambil', 'Selesai', 'Dibatalkan'].map(s => (
                             <option key={s} value={s}>{s}</option>
                           ))}
                         </select>

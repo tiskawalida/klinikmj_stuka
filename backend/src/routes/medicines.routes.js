@@ -18,7 +18,7 @@ const uploadImage = multer({ storage: imageStorage, limits: { fileSize: 5 * 1024
 const uploadCsv = multer({ storage: csvStorage });
 
 router.get('/', verifyToken, getAll);
-router.get('/low-stock', verifyToken, roleGuard('Admin', 'Apoteker'), getLowStock);
+router.get('/low-stock', verifyToken, roleGuard('Admin', 'Apoteker', 'Kasir'), getLowStock);
 router.get('/expiring', verifyToken, roleGuard('Admin', 'Apoteker'), getExpiring);
 router.get('/:id', verifyToken, getById);
 router.post('/', verifyToken, roleGuard('Admin', 'Apoteker'), uploadImage.single('image'), create);

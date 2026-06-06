@@ -3,7 +3,7 @@ const { getPenjualan, getStokKritis, getKadaluarsa, exportPdf } = require('../co
 const { verifyToken } = require('../middleware/auth');
 const { roleGuard } = require('../middleware/roleGuard');
 
-router.use(verifyToken, roleGuard('Admin', 'Apoteker'));
+router.use(verifyToken, roleGuard('Admin', 'Apoteker', 'Kasir'));
 router.get('/penjualan', getPenjualan);
 router.get('/stok-kritis', getStokKritis);
 router.get('/kadaluarsa', getKadaluarsa);

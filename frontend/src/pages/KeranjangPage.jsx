@@ -14,19 +14,27 @@ export default function KeranjangPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const [paymentMethod, setPaymentMethod] = useState('Tunai');
   const [amountPaid, setAmountPaid] = useState('');
   const [notes, setNotes] = useState('');
   const [resepFile, setResepFile] = useState(null);
   const [resepPreview, setResepPreview] = useState(null);
   const [resepVerified, setResepVerified] = useState(false); // Kasir toggle
   const [loading, setLoading] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState('Ambil di Klinik');
   const fileRef = useRef();
 
   const isPasien = user?.role === 'Pasien';
   const isKasir = user?.role === 'Kasir';
+
+  const validPaymentMethods = isKasir 
+    ? ['Tunai', 'Transfer Bank', 'QRIS', 'Kartu Debit', 'Kartu Kredit']
+    : ['Transfer Bank', 'QRIS', 'Kartu Debit', 'Kartu Kredit'];
+    
+  const [paymentMethod, setPaymentMethod] = useState(() => isKasir ? 'Tunai' : 'Transfer Bank');
+
   const needsResep = hasObatResep && isPasien;
-  const change = parseFloat(amountPaid) - totalAmount;
+  const cleanAmountPaid = amountPaid ? parseFloat(String(amountPaid).replace(/[^0-9.-]+/g, "")) : 0;
+  const change = cleanAmountPaid - totalAmount;
 
   const handleResepChange = (e) => {
     const file = e.target.files[0];
@@ -41,7 +49,7 @@ export default function KeranjangPage() {
       toast.error('📋 Anda harus melampirkan resep dokter untuk Obat Resep!');
       return;
     }
-    if (paymentMethod === 'Tunai' && amountPaid && parseFloat(amountPaid) < totalAmount) {
+    if (paymentMethod === 'Tunai' && amountPaid && cleanAmountPaid < totalAmount - 0.01) {
       toast.error('Uang yang dibayarkan kurang dari total belanja.'); return;
     }
 
@@ -50,7 +58,8 @@ export default function KeranjangPage() {
       const fd = new FormData();
       fd.append('items', JSON.stringify(cart.map(i => ({ medicineId: i.id, quantity: i.quantity }))));
       fd.append('paymentMethod', paymentMethod);
-      fd.append('amountPaid', amountPaid || totalAmount);
+      fd.append('deliveryMethod', deliveryMethod);
+      fd.append('amountPaid', amountPaid ? cleanAmountPaid : totalAmount);
       fd.append('notes', notes);
       if (resepFile) fd.append('resep', resepFile);
       if (isKasir && resepVerified) fd.append('resepImageUrl', 'verified-offline');
@@ -195,11 +204,31 @@ export default function KeranjangPage() {
                 </div>
               )}
 
+              {/* Delivery Method */}
+              {isPasien && (
+                <div className="form-group">
+                  <label className="form-label">Metode Pengiriman</label>
+                  <div className="payment-methods">
+                    {['Ambil di Klinik', 'Diantar ke Alamat'].map(m => (
+                      <button key={m} className={`payment-method-btn ${deliveryMethod === m ? 'active' : ''}`}
+                        onClick={() => setDeliveryMethod(m)}>
+                        {m === 'Ambil di Klinik' ? '🏥' : '🛵'} {m}
+                      </button>
+                    ))}
+                  </div>
+                  {deliveryMethod === 'Diantar ke Alamat' && (
+                    <p style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 8}}>
+                      Pesanan akan diantar ke: <strong>{user?.address || 'Alamat belum diatur di profil Anda'}</strong>
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Payment Method */}
               <div className="form-group">
                 <label className="form-label">Metode Pembayaran</label>
                 <div className="payment-methods">
-                  {PAYMENT_METHODS.map(m => (
+                  {validPaymentMethods.map(m => (
                     <button key={m} className={`payment-method-btn ${paymentMethod === m ? 'active' : ''}`}
                       onClick={() => setPaymentMethod(m)}>
                       {m === 'Tunai' ? '💵' : m === 'QRIS' ? '📱' : m === 'Transfer Bank' ? '🏦' : '💳'} {m}
@@ -211,8 +240,13 @@ export default function KeranjangPage() {
               {paymentMethod === 'Tunai' && (
                 <div className="form-group">
                   <label className="form-label">Uang Dibayarkan</label>
-                  <input className="form-input" type="number" placeholder="Masukkan nominal"
-                    value={amountPaid} onChange={e => setAmountPaid(e.target.value)} />
+                  <input className="form-input" type="text" inputMode="numeric" placeholder="Contoh: 50000 atau 50.000"
+                    value={amountPaid} 
+                    onChange={e => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      setAmountPaid(val ? parseInt(val, 10).toString() : "");
+                    }} 
+                  />
                 </div>
               )}
 

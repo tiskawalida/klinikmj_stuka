@@ -52,23 +52,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="login-hero-text">
-            <h2>Layanan Farmasi<br /><span>Terpercaya & Modern</span></h2>
-            <p>Akses katalog obat lengkap, kelola transaksi, pantau stok secara real-time kapanpun dan dimanapun.</p>
-          </div>
 
-          <div className="login-features">
-            {[
-              { icon: '🔒', text: 'Keamanan data terjamin' },
-              { icon: '⚡', text: 'Transaksi cepat & akurat' },
-              { icon: '📊', text: 'Laporan real-time terintegrasi' },
-              { icon: '💊', text: 'Verifikasi resep dokter digital' },
-            ].map(f => (
-              <div key={f.text} className="login-feature-item">
-                <span>{f.icon}</span> <span>{f.text}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 

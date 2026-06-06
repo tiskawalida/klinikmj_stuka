@@ -17,36 +17,59 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [laporan, lowStockRes, trxRes] = await Promise.all([
-          laporanAPI.getPenjualan({ period: 'daily' }),
-          medicinesAPI.getLowStock().catch(() => ({ data: { data: [] } })),
-          transactionsAPI.getAll({ limit: 5 }).catch(() => ({ data: { data: [] } })),
-        ]);
+        if (user?.role === 'Pasien') {
+          const trxRes = await transactionsAPI.getAll({ limit: 1000 }).catch(() => ({ data: { data: [] } }));
+          const trxs = trxRes.data.data || [];
+          let totalSpent = 0;
+          let pending = 0;
+          let completed = 0;
+          trxs.forEach(t => {
+            if (t.status === 'Selesai') {
+              completed++;
+              totalSpent += parseFloat(t.totalAmount) || 0;
+            } else if (t.status !== 'Dibatalkan') {
+              pending++;
+            }
+          });
+          setStats({
+            totalSpent,
+            totalTransaksi: trxs.length,
+            pending,
+            completed
+          });
+          setRecentTrx(trxs.slice(0, 5));
+        } else {
+          const [laporan, lowStockRes, trxRes] = await Promise.all([
+            laporanAPI.getPenjualan({ period: 'daily' }),
+            medicinesAPI.getLowStock().catch(() => ({ data: { data: [] } })),
+            transactionsAPI.getAll({ limit: 5 }).catch(() => ({ data: { data: [] } })),
+          ]);
 
-        const summary = laporan.data.summary || {};
-        setStats({
-          totalRevenue: parseFloat(summary.totalPendapatan) || 0,
-          totalTransaksi: parseInt(summary.totalTransaksi) || 0,
-          lowStock: lowStockRes.data.data?.length || 0,
-          expiring: laporan.data.data?.length || 0,
-        });
+          const summary = laporan.data.summary || {};
+          setStats({
+            totalRevenue: parseFloat(summary.totalPendapatan) || 0,
+            totalTransaksi: parseInt(summary.totalTransaksi) || 0,
+            lowStock: lowStockRes.data.data?.length || 0,
+            expiring: laporan.data.data?.length || 0,
+          });
 
-        const chart = (laporan.data.data || []).map(d => ({
-          period: d.period,
-          pendapatan: parseFloat(d.totalPendapatan) || 0,
-          transaksi: parseInt(d.totalTransaksi) || 0,
-        }));
-        setChartData(chart);
-        setTopMeds(laporan.data.topMedicines || []);
-        setRecentTrx(trxRes.data.data || []);
+          const chart = (laporan.data.data || []).map(d => ({
+            period: d.period,
+            pendapatan: parseFloat(d.totalPendapatan) || 0,
+            transaksi: parseInt(d.totalTransaksi) || 0,
+          }));
+          setChartData(chart);
+          setTopMeds(laporan.data.topMedicines || []);
+          setRecentTrx(trxRes.data.data || []);
+        }
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    loadData();
-  }, []);
+    if (user) loadData();
+  }, [user]);
 
   const PIE_COLORS = ['#0d9488', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6'];
 
@@ -90,111 +113,148 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stat Cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#f0fdfa' }}>💰</div>
-          <div className="stat-label">Total Pendapatan (7 Hari)</div>
-          <div className="stat-value">Rp {stats.totalRevenue.toLocaleString('id-ID')}</div>
-          <div className="stat-change up">↑ Real-time</div>
+      {user?.role === 'Pasien' ? (
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#f0fdfa' }}>🛍️</div>
+            <div className="stat-label">Total Belanja Saya</div>
+            <div className="stat-value">Rp {(stats.totalSpent || 0).toLocaleString('id-ID')}</div>
+            <div className="stat-change up">Dari pesanan selesai</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#eff6ff' }}>🧾</div>
+            <div className="stat-label">Total Pesanan</div>
+            <div className="stat-value">{stats.totalTransaksi || 0}</div>
+            <div className="stat-change up">Keseluruhan</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#fffbeb' }}>⏳</div>
+            <div className="stat-label">Pesanan Diproses</div>
+            <div className="stat-value" style={{ color: stats.pending > 0 ? 'var(--warning)' : 'inherit' }}>
+              {stats.pending || 0}
+            </div>
+            <div className={`stat-change ${stats.pending > 0 ? 'down' : 'up'}`}>
+              {stats.pending > 0 ? 'Menunggu konfirmasi/proses' : 'Semua tuntas'}
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#fef2f2' }}>✅</div>
+            <div className="stat-label">Pesanan Selesai</div>
+            <div className="stat-value" style={{ color: 'var(--success)' }}>
+              {stats.completed || 0}
+            </div>
+            <div className="stat-change up">Telah diterima</div>
+          </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#eff6ff' }}>🧾</div>
-          <div className="stat-label">Total Transaksi</div>
-          <div className="stat-value">{stats.totalTransaksi}</div>
-          <div className="stat-change up">↑ 7 hari terakhir</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#fffbeb' }}>⚠️</div>
-          <div className="stat-label">Obat Stok Kritis</div>
-          <div className="stat-value" style={{ color: stats.lowStock > 0 ? 'var(--warning)' : 'inherit' }}>
-            {stats.lowStock}
-          </div>
-          <div className={`stat-change ${stats.lowStock > 0 ? 'down' : 'up'}`}>
-            {stats.lowStock > 0 ? '⚠️ Perlu restock' : '✅ Normal'}
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#fef2f2' }}>⏰</div>
-          <div className="stat-label">Obat Mendekati Kadaluarsa</div>
-          <div className="stat-value" style={{ color: stats.expiring > 0 ? 'var(--danger)' : 'inherit' }}>
-            {stats.expiring}
-          </div>
-          <div className={`stat-change ${stats.expiring > 0 ? 'down' : 'up'}`}>
-            {stats.expiring > 0 ? '🚨 Perlu perhatian' : '✅ Aman'}
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Row */}
-      <div className="dashboard-charts">
-        {/* Area Chart */}
-        <div className="card chart-card">
-          <div className="card-header">
-            <h3>📈 Tren Pendapatan (7 Hari)</h3>
-          </div>
-          <div className="card-body" style={{ padding: '8px 16px 16px' }}>
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="tealGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="period" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `Rp ${(v/1000).toFixed(0)}K`} />
-                  <Tooltip formatter={(v) => [`Rp ${v.toLocaleString('id-ID')}`, 'Pendapatan']} />
-                  <Area type="monotone" dataKey="pendapatan" stroke="#0d9488" strokeWidth={2.5} fill="url(#tealGrad)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="empty-state" style={{ minHeight: 180 }}>
-                <div className="empty-icon">📊</div>
-                <p>Belum ada data penjualan</p>
+      ) : (
+        <>
+          {/* Stat Cards */}
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: '#f0fdfa' }}>💰</div>
+              <div className="stat-label">Total Pendapatan (7 Hari)</div>
+              <div className="stat-value">Rp {(stats.totalRevenue || 0).toLocaleString('id-ID')}</div>
+              <div className="stat-change up">↑ Real-time</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: '#eff6ff' }}>🧾</div>
+              <div className="stat-label">Total Transaksi</div>
+              <div className="stat-value">{stats.totalTransaksi || 0}</div>
+              <div className="stat-change up">↑ 7 hari terakhir</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: '#fffbeb' }}>⚠️</div>
+              <div className="stat-label">Obat Stok Kritis</div>
+              <div className="stat-value" style={{ color: stats.lowStock > 0 ? 'var(--warning)' : 'inherit' }}>
+                {stats.lowStock || 0}
               </div>
-            )}
+              <div className={`stat-change ${stats.lowStock > 0 ? 'down' : 'up'}`}>
+                {stats.lowStock > 0 ? '⚠️ Perlu restock' : '✅ Normal'}
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon" style={{ background: '#fef2f2' }}>⏰</div>
+              <div className="stat-label">Obat Mendekati Kadaluarsa</div>
+              <div className="stat-value" style={{ color: stats.expiring > 0 ? 'var(--danger)' : 'inherit' }}>
+                {stats.expiring || 0}
+              </div>
+              <div className={`stat-change ${stats.expiring > 0 ? 'down' : 'up'}`}>
+                {stats.expiring > 0 ? '🚨 Perlu perhatian' : '✅ Aman'}
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Top Medicines Pie */}
-        <div className="card chart-card">
-          <div className="card-header">
-            <h3>🏆 Obat Terlaris</h3>
-          </div>
-          <div className="card-body chart-pie-body">
-            {topMeds.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie data={topMeds.slice(0, 5)} dataKey="totalTerjual" nameKey="medicineName"
-                      cx="50%" cy="50%" outerRadius={70} label={false}>
-                      {topMeds.slice(0, 5).map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip formatter={(v, n) => [v, n]} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="pie-legend">
-                  {topMeds.slice(0, 5).map((m, i) => (
-                    <div key={i} className="pie-legend-item">
-                      <span className="pie-dot" style={{ background: PIE_COLORS[i] }}></span>
-                      <span>{m.medicineName}</span>
-                      <span className="pie-val">{m.totalTerjual} terjual</span>
+          {/* Charts Row */}
+          <div className="dashboard-charts">
+            {/* Area Chart */}
+            <div className="card chart-card">
+              <div className="card-header">
+                <h3>📈 Tren Pendapatan (7 Hari)</h3>
+              </div>
+              <div className="card-body" style={{ padding: '8px 16px 16px' }}>
+                {chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="tealGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="period" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `Rp ${(v/1000).toFixed(0)}K`} />
+                      <Tooltip formatter={(v) => [`Rp ${v.toLocaleString('id-ID')}`, 'Pendapatan']} />
+                      <Area type="monotone" dataKey="pendapatan" stroke="#0d9488" strokeWidth={2.5} fill="url(#tealGrad)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="empty-state" style={{ minHeight: 180 }}>
+                    <div className="empty-icon">📊</div>
+                    <p>Belum ada data penjualan</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Top Medicines Pie */}
+            <div className="card chart-card">
+              <div className="card-header">
+                <h3>🏆 Obat Terlaris</h3>
+              </div>
+              <div className="card-body chart-pie-body">
+                {topMeds.length > 0 ? (
+                  <>
+                    <ResponsiveContainer width="100%" height={180}>
+                      <PieChart>
+                        <Pie data={topMeds.slice(0, 5)} dataKey="totalTerjual" nameKey="medicineName"
+                          cx="50%" cy="50%" outerRadius={70} label={false}>
+                          {topMeds.slice(0, 5).map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip formatter={(v, n) => [v, n]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="pie-legend">
+                      {topMeds.slice(0, 5).map((m, i) => (
+                        <div key={i} className="pie-legend-item">
+                          <span className="pie-dot" style={{ background: PIE_COLORS[i] }}></span>
+                          <span>{m.medicineName}</span>
+                          <span className="pie-val">{m.totalTerjual} terjual</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="empty-state" style={{ minHeight: 180 }}>
-                <div className="empty-icon">📦</div>
-                <p>Belum ada data penjualan</p>
+                  </>
+                ) : (
+                  <div className="empty-state" style={{ minHeight: 180 }}>
+                    <div className="empty-icon">📦</div>
+                    <p>Belum ada data penjualan</p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Recent Transactions */}
       <div className="card">

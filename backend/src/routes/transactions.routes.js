@@ -15,7 +15,7 @@ router.post('/checkout', verifyToken, roleGuard('Kasir', 'Pasien'), uploadResep.
   next();
 }, checkout);
 
-router.get('/', verifyToken, roleGuard('Admin', 'Kasir', 'Pasien'), getAll);
+router.get('/', verifyToken, roleGuard('Admin', 'Kasir', 'Pasien', 'Apoteker'), getAll);
 router.get('/:id', verifyToken, roleGuard('Admin', 'Kasir', 'Pasien'), getById);
 router.patch('/:id/status', verifyToken, roleGuard('Admin', 'Kasir'), updateStatus);
 
