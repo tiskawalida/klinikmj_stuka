@@ -3,3 +3,5 @@ backend/uploads/
 frontend/dist/
 .env
 .env.local
+*.sqlite
+database.sqlite
